@@ -319,6 +319,8 @@
         } else { pintarUpdate(await api.updateCheck()); }
         break;
       }
+      case 'updInstall': { const r = await api.updateInstall(); if (!r.ok) toast(r.error || 'Não foi possível atualizar agora.', { erro: true }); break; }
+      case 'updDepois': if (S.upd) S.updFechado = (S.upd.versao + '|' + S.upd.estado); renderCartaoUpdate(S.upd || {}); break;
       case 'toggleSidebar': setSidebar(!document.getElementById('sidebar').classList.contains('recolhido'), true); break;
       case 'tour': if (window.CFTour) window.CFTour.start(); break;
       case 'logout': if (window.CFTour) window.CFTour.fechar(); await api.logout(); S.data = null; mostrarLogin(); break;
@@ -328,27 +330,49 @@
   }
 
   // ---------- atualização automática ----------
+  const ICO = {
+    ok: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M7.8 12.4l3 3 5.4-6"/>'),
+    espera: SVG('<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/>'),
+    aviso: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M12 7v7M8.8 11.5l3.2 3.2 3.2-3.2"/>'),
+    pronta: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M12 17V8M8.6 11.2L12 7.8l3.4 3.4"/>'),
+    erro: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.2v.1"/>'),
+    dev: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M8 12h8"/>'),
+  };
+  function textoUpdate(u) {
+    switch (u.estado) {
+      case 'dev': return ['dev', 'Modo de teste'];
+      case 'verificando': return ['espera', 'Verificando…'];
+      case 'baixando': return ['aviso', 'Baixando ' + (u.pct || 0) + '%'];
+      case 'pronta': return ['pronta', 'Nova versão ' + (u.versao || '') + ' pronta'];
+      case 'erro': return ['erro', 'Sem conexão'];
+      default: return ['ok', 'Atualizado'];
+    }
+  }
+  function renderCartaoUpdate(u) {
+    const c = document.getElementById('updCard'); if (!c) return;
+    const app = document.getElementById('app');
+    const aberto = (u.estado === 'baixando' || u.estado === 'pronta') && app && !app.hidden && S.updFechado !== (u.versao + '|' + u.estado);
+    if (!aberto) { c.hidden = true; return; }
+    const pronta = u.estado === 'pronta';
+    const antes = c.hidden;
+    c.innerHTML = '<div class="upd-t">Nova versão ' + esc(u.versao || '') + (pronta ? ' pronta' : ' encontrada') + '</div>' +
+      (pronta
+        ? '<p>O programa fecha e abre de novo sozinho. Seus dados não são alterados.</p><div class="upd-b"><button class="btn small" data-action="updInstall">Atualizar agora</button><button class="btn light small" data-action="updDepois">Depois</button></div>'
+        : '<p>Baixando em segundo plano. Você pode continuar usando o sistema.</p><div class="upd-bar"><i style="width:' + (u.pct || 0) + '%"></i></div><div class="upd-b"><button class="btn light small" data-action="updDepois">Ocultar</button></div>');
+    c.hidden = false;
+    if (antes && pronta) { const b = c.querySelector('[data-action=updInstall]'); if (b) b.focus({ preventScroll: true }); }
+  }
   function pintarUpdate(u) {
     if (!u) return;
     S.upd = u;
-    const dot = document.getElementById('sbDot'); const tx = document.getElementById('sbUpdTx'); const bt = document.getElementById('sbUpd');
-    if (!dot || !tx) return;
-    const v = '<b>' + esc(u.atual || (S.info && S.info.version) || '') + '</b>';
-    const TXT = {
-      dev: ['', 'Versão ' + v + ' · modo teste'],
-      atualizado: ['ok', 'Versão ' + v + ' · Atualizado'],
-      verificando: ['espera', 'Verificando atualizações…'],
-      baixando: ['aviso', 'Baixando a versão ' + esc(u.versao || '') + ' · ' + (u.pct || 0) + '%'],
-      pronta: ['pronta', 'Versão ' + esc(u.versao || '') + ' pronta · Reiniciar'],
-      erro: ['erro', 'Versão ' + v + ' · não foi possível verificar'],
-    };
-    const [cls, html] = TXT[u.estado] || TXT.atualizado;
-    dot.className = 'dot ' + cls; tx.innerHTML = html;
+    const ic = document.getElementById('sbIc'); const tx = document.getElementById('sbUpdTx'); const bt = document.getElementById('sbUpd'); const ver = document.getElementById('sbVersao');
+    if (!ic || !tx) return;
+    const [cls, texto] = textoUpdate(u);
+    ic.className = 'ver-ic ' + cls; ic.innerHTML = ICO[cls];
+    tx.textContent = texto;
+    if (ver && (u.atual || (S.info && S.info.version))) ver.textContent = u.atual || S.info.version;
     bt.title = u.estado === 'pronta' ? 'Instalar a atualização' : 'Verificar atualizações';
-    if (u.estado === 'pronta' && !S.avisouUpd) {
-      S.avisouUpd = true;
-      toast('Nova versão ' + (u.versao || '') + ' pronta para instalar.', { action: { label: 'Atualizar', fn: () => handleAction('update', null) } });
-    }
+    renderCartaoUpdate(u);
   }
 
   // ---------- barra lateral (abre e fecha só com clique no botão) ----------
@@ -412,6 +436,7 @@
     document.getElementById('app').hidden = true;
     document.getElementById('login').hidden = false;
     document.getElementById('modalRoot').innerHTML = '';
+    const uc = document.getElementById('updCard'); if (uc) uc.hidden = true;
     document.getElementById('formLogin').reset();
     document.getElementById('lErro').textContent = '';
     document.getElementById('lAjuda').hidden = true;

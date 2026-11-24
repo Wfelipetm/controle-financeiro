@@ -78,23 +78,31 @@ function enviarUpdate(patch) {
   Object.assign(upd, patch);
   if (win && !win.isDestroyed()) win.webContents.send('update:status', { ...upd, atual: app.getVersion() });
 }
-function verificarAtualizacao() {
+let checagemManual = false;   // só mostra "Verificando…" e erros quando ela mesma pediu
+let ultimaChecagem = 0;
+function verificarAtualizacao(manual = false) {
   if (!autoUpdater || !app.isPackaged) return Promise.resolve();
   if (upd.estado === 'baixando' || upd.estado === 'pronta') return Promise.resolve();
-  return autoUpdater.checkForUpdates().catch(() => enviarUpdate({ estado: 'erro' }));
+  const agora = Date.now();
+  if (!manual && agora - ultimaChecagem < 30 * 1000) return Promise.resolve();
+  ultimaChecagem = agora; checagemManual = manual;
+  return autoUpdater.checkForUpdates().catch(() => { if (manual) enviarUpdate({ estado: 'erro' }); });
 }
 function iniciarAtualizador() {
   if (!autoUpdater || !app.isPackaged) return;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;   // se ela só fechar o app, instala ao sair
-  autoUpdater.on('checking-for-update', () => enviarUpdate({ estado: 'verificando' }));
+  autoUpdater.on('checking-for-update', () => { if (checagemManual) enviarUpdate({ estado: 'verificando' }); });
   autoUpdater.on('update-available', (i) => enviarUpdate({ estado: 'baixando', versao: i.version, pct: 0 }));
   autoUpdater.on('update-not-available', () => enviarUpdate({ estado: 'atualizado', versao: null }));
   autoUpdater.on('download-progress', (p) => enviarUpdate({ estado: 'baixando', pct: Math.round(p.percent || 0) }));
   autoUpdater.on('update-downloaded', (i) => enviarUpdate({ estado: 'pronta', versao: i.version }));
-  autoUpdater.on('error', () => enviarUpdate({ estado: 'erro' }));
-  setTimeout(verificarAtualizacao, 8000);
-  setInterval(verificarAtualizacao, 4 * 60 * 60 * 1000);
+  autoUpdater.on('error', () => { if (checagemManual) enviarUpdate({ estado: 'erro' }); });
+  // verifica logo ao abrir, a cada minuto e sempre que ela volta para a janela do sistema:
+  // assim o aviso aparece poucos instantes depois de o Release ficar pronto no GitHub
+  setTimeout(() => verificarAtualizacao(), 5000);
+  setInterval(() => verificarAtualizacao(), 60 * 1000);
+  if (win) win.on('focus', () => verificarAtualizacao());
 }
 
 function registrarIPC() {
@@ -210,7 +218,7 @@ function registrarIPC() {
   });
 
   handle('update:status', () => ({ ok: true, ...upd, atual: app.getVersion() }));
-  handle('update:check', async () => { await verificarAtualizacao(); return { ok: true, ...upd, atual: app.getVersion() }; });
+  handle('update:check', async () => { await verificarAtualizacao(true); return { ok: true, ...upd, atual: app.getVersion() }; });
   handle('update:install', () => {
     if (upd.estado !== 'pronta' || !autoUpdater) return { ok: false, error: 'Nenhuma atualização pronta para instalar.' };
     setImmediate(() => autoUpdater.quitAndInstall(true, true)); // silencioso e reabre o app

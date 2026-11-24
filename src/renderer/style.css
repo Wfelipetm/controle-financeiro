@@ -284,3 +284,29 @@ td.acoes { text-align: right; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .sb-version .dot { animation: none !important; } }
 
 #tourCard { visibility: hidden; }
+
+/* caixa de versão (estilo "Versão X / Atualizado") */
+.sb-version { display: flex; align-items: center; gap: .7rem; width: 100%; padding: .55rem .75rem; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(12,6,34,.75); color: #fff; font: inherit; text-align: left; cursor: pointer; }
+.sb-version:hover { background: rgba(12,6,34,.95); border-color: rgba(255,255,255,.22); }
+.ver-ic { width: 1.7rem; height: 1.7rem; flex-shrink: 0; display: flex; }
+.ver-ic svg { width: 100%; height: 100%; }
+.ver-ic.ok { color: #4ADE80; } .ver-ic.espera { color: #94A3B8; } .ver-ic.espera svg { animation: gira 1s linear infinite; }
+.ver-ic.aviso { color: #FBBF24; } .ver-ic.pronta { color: #C084FC; animation: pulsa 1.4s infinite; }
+.ver-ic.erro { color: #F87171; } .ver-ic.dev { color: #94A3B8; }
+@keyframes gira { to { transform: rotate(360deg); } }
+.ver-tx { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.ver-tx b { font-size: .95rem; white-space: nowrap; }
+.ver-tx small { font-size: .78rem; color: #A9A3C2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#sidebar.recolhido .sb-version { justify-content: center; padding: .5rem 0; }
+#sidebar.recolhido .ver-tx { display: none; }
+@media (prefers-reduced-motion: reduce) { .ver-ic.espera svg, .ver-ic.pronta { animation: none !important; } }
+
+/* cartão de aviso de nova versão */
+#updCard { position: fixed; top: 46px; right: 16px; z-index: 150; width: 21rem; max-width: calc(100vw - 32px); background: #fff; color: #231a38; border-radius: 14px; border-top: 5px solid #8B3DFF; padding: .9rem 1rem 1rem; box-shadow: 0 14px 40px rgba(20,0,50,.35); animation: entra .3s ease-out; }
+@keyframes entra { from { transform: translateY(-10px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #updCard { animation: none; } }
+.upd-t { font-weight: 800; font-size: 1.05rem; color: var(--azul-esc); }
+#updCard p { margin: .35rem 0 .8rem; font-size: .92rem; line-height: 1.45; }
+.upd-b { display: flex; gap: .5rem; flex-wrap: wrap; }
+.upd-bar { height: .5rem; border-radius: 999px; background: #e6dff3; overflow: hidden; margin-bottom: .8rem; }
+.upd-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8B3DFF, #C084FC); transition: width .3s; }
