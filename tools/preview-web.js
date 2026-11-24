@@ -67,6 +67,8 @@ const mock = `
     deleteLanc: (d, p) => C.deleteLanc(d, p.id),
   };
   let logado = false;
+  let bk = null; // backup automático simulado
+  const bkStatus = () => ({ ok: true, pasta: bk ? bk.pasta : null, ultimo: bk ? bk.ultimo : null, erro: null, aviso: null, ligado: !!bk });
   const SEM_ARQUIVO = { ok: false, error: 'Na prévia não dá para salvar ou abrir arquivos. No aplicativo instalado isso funciona normalmente.' };
   const ok = (v) => Promise.resolve(v);
 
@@ -92,7 +94,11 @@ const mock = `
     updateStatus: () => ok({ estado: 'atualizado', atual: '1.0.0', versao: null, pct: 0 }),
     updateCheck: () => ok({ estado: 'atualizado', atual: '1.0.0', versao: null, pct: 0 }),
     updateInstall: () => ok({ ok: false }), onUpdate: () => {},
-    showInFolder: () => ok(), openDataFolder: () => ok(),
+    backupStatus: () => ok(bkStatus()),
+    backupEscolher: () => { bk = { pasta: 'G:\Meu Drive\Financeiro (exemplo)', ultimo: new Date().toISOString(), erro: null }; return ok(bkStatus()); },
+    backupAgora: () => { if (bk) bk.ultimo = new Date().toISOString(); return ok(bkStatus()); },
+    backupRemover: () => { bk = null; return ok(bkStatus()); },
+    showInFolder: () => ok(),
   };
 })();
 `;

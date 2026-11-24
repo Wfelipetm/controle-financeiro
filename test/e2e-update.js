@@ -45,7 +45,7 @@ app.whenReady().then(async () => {
     ok(await js(`!!document.querySelector('.modal') && document.querySelector('.modal').textContent.includes('Reiniciar e atualizar')`), 'clicar na caixa de versão pronta abre a confirmação');
     await js(`[...document.querySelectorAll('.modal button')].find(b=>b.textContent.includes('Agora não')).click()`); await sleep(300);
     ok(await js(`!document.querySelector('.modal')`), '"Agora não" fecha sem instalar');
-    await js(`document.getElementById('sbToggle').click()`); await sleep(500);
+    await js(`document.getElementById('sidebar').click()`); await sleep(500);
     ok(await js(`getComputedStyle(document.querySelector('.ver-tx')).display==='none' && document.getElementById('sbIc').getBoundingClientRect().width>0`), 'menu recolhido mostra só o ícone da versão');
     await js(`document.querySelector('[data-action=logout]').click()`); await sleep(500);
     ok(await js(`document.getElementById('updCard').hidden`), 'cartão some na tela de login');

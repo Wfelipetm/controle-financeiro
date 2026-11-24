@@ -9,11 +9,13 @@ const { parseWorkbook, mergeInto } = require('./importer.js');
 const { exportarExcel, relatorioHTML } = require('./exporter.js');
 const { Auth } = require('./auth.js');
 const { Lembrar } = require('./lembrar.js');
+const { BackupExterno } = require('./backupExterno.js');
 let autoUpdater = null;
 try { ({ autoUpdater } = require('electron-updater')); } catch (_) { /* sem atualizador */ }
 
 const dataDir = process.env.CF_DATA_DIR || app.getPath('userData');
 const store = new Store(dataDir);
+const externo = new BackupExterno(dataDir, store);
 let win = null;
 const auth = new Auth();
 const lembrar = new Lembrar(dataDir, safeStorage);
@@ -63,6 +65,7 @@ function pushAndSave(fn) {
   try {
     const result = fn(store.data);
     store.save();
+    externo.agendar();
     return { ok: true, data: store.data, result };
   } catch (err) {
     store.reload(); // volta ao que está gravado no disco
@@ -192,7 +195,7 @@ function registrarIPC() {
       detail: `Ela tem ${obj.estabelecimentos.length} estabelecimento(s) e ${obj.lancamentos.length} lançamento(s). Os dados atuais serão substituídos (uma cópia deles é guardada antes, por segurança).`,
     });
     if (conf.response !== 0) return { ok: false, canceled: true };
-    try { store.snapshot('restaurar'); store.replace(obj); return { ok: true, data: store.data }; }
+    try { store.snapshot('restaurar'); store.replace(obj); externo.agendar(); return { ok: true, data: store.data }; }
     catch (err) { store.reload(); return { ok: false, error: 'Não foi possível restaurar a cópia.' }; }
   });
 
@@ -225,8 +228,18 @@ function registrarIPC() {
     return { ok: true };
   });
 
+  // backup automático em pasta escolhida (Google Drive, OneDrive, pen drive...)
+  handle('backup:status', () => ({ ok: true, ...externo.status() }));
+  handle('backup:escolher', async () => {
+    const r = await dialog.showOpenDialog(win, { title: 'Escolha a pasta do backup automático', properties: ['openDirectory', 'createDirectory'] });
+    if (r.canceled || !r.filePaths.length) return { ok: false, canceled: true };
+    const res = externo.definirPasta(r.filePaths[0]);
+    return res.ok ? { ok: true, ...externo.status() } : res;
+  });
+  handle('backup:agora', () => { const r = externo.executar(); return r.ok ? { ok: true, ...externo.status() } : { ...r, ...externo.status(), ok: false }; });
+  handle('backup:remover', () => { externo.remover(); return { ok: true, ...externo.status() }; });
+
   handle('shell:showInFolder', (_e, p) => { if (typeof p === 'string') shell.showItemInFolder(p); });
-  handle('shell:openDataFolder', () => shell.openPath(dataDir));
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -237,10 +250,12 @@ if (!app.requestSingleInstanceLock()) {
     Menu.setApplicationMenu(null);
     store.load();
     try { store.dailyBackup(); } catch (_) { /* cópia automática é um extra */ }
+    try { externo.executar(); } catch (_) { /* backup em pasta externa é um extra */ }
     registrarIPC();
     createWindow();
     iniciarAtualizador();
     app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
   });
+  app.on('before-quit', () => { try { externo.finalizar(); } catch (_) { /* ignora */ } });
   app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 }

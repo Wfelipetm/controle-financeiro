@@ -105,12 +105,28 @@
       navBtn(v === 'gerenciar' || v === 'estab', 'nav', 'data-view="gerenciar"', ICO_LOJA, 'Estabelecimentos');
   }
 
+  // ---------- backup ----------
+  const fmtQuando = (iso) => { try { return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
+  function avisoBackup() {
+    const b = S.backup; if (!b) return '';
+    if (b.aviso === 'erro') return `<div class="aviso aviso-erro"><span><b>O backup automático não está funcionando.</b> ${esc(b.erro || '')}</span><button class="btn light small" data-action="irBackup">Ver backup</button></div>`;
+    if (b.aviso === 'antigo') return `<div class="aviso aviso-erro"><span><b>O último backup automático foi ${b.ultimo ? 'em ' + esc(fmtQuando(b.ultimo)) : 'há muito tempo'}.</b> Confira se a pasta do backup está acessível.</span><button class="btn light small" data-action="irBackup">Ver backup</button></div>`;
+    let dispensado = 0; try { dispensado = Number(localStorage.getItem('cf_aviso_backup')) || 0; } catch (_) { /* ok */ }
+    if (!b.ligado && Date.now() - dispensado > 7 * 24 * 3600 * 1000) return `<div class="aviso"><span>Seus dados estão <b>só neste computador</b>. Ligue o backup automático para não perder nada.</span><span class="aviso-b"><button class="btn small" data-action="irBackup">Configurar</button><button class="link-btn" data-action="dispensarBackup">Depois</button></span></div>`;
+    return '';
+  }
+  async function atualizarBackup(rerender) {
+    try { S.backup = await api.backupStatus(); } catch (_) { /* sem status */ }
+    if (rerender) render();
+  }
+
   function viewResumo() {
     const { linhas, total } = C.resumoGeral(S.data, S.mes, S.ano);
     const head = `<div class="banner"><div><h1>Resumo Mensal por Estabelecimento</h1><div class="sub">${esc(C.periodoLabel(S.mes, S.ano))}</div></div>
       <div class="banner-actions"><button class="btn light" data-action="exportExcel">Exportar Excel</button><button class="btn light" data-action="exportPdf">Exportar PDF</button></div></div>`;
+    const headFull = head + avisoBackup();
     if (!S.data.estabelecimentos.length) {
-      return head + `<div class="card empty" style="margin-top:1.2rem"><h3>Vamos começar!</h3>
+      return headFull + `<div class="card empty" style="margin-top:1.2rem"><h3>Vamos começar!</h3>
         <div>Primeiro cadastre os estabelecimentos. Depois é só lançar as entradas e saídas.</div>
         <div class="row"><button class="btn green" data-action="seedPadrao">Criar: ${PADRAO.join(', ')}</button>
         <button class="btn light" data-action="importXlsx">Importar da planilha</button>
@@ -118,7 +134,7 @@
     }
     const corpo = linhas.map((l) => `<tr class="click" data-action="goEstab" data-id="${esc(l.estabId)}"><td><b>${esc(l.nome)}</b></td>
       <td class="n">${C.fmtBRL(l.entrada)}</td><td class="n">${C.fmtBRL(l.saida)}</td><td class="n ${l.saldo < 0 ? 'neg' : ''}">${C.fmtBRL(l.saldo)}</td></tr>`).join('');
-    return head + periodControls() + `<div class="table-wrap"><table>
+    return headFull + periodControls() + `<div class="table-wrap"><table>
       <thead><tr><th>Estabelecimento</th><th class="n">Total Entrada</th><th class="n">Total Saída</th><th class="n">Saldo</th></tr></thead>
       <tbody>${corpo}</tbody>
       <tfoot><tr><td>Total Geral</td><td class="n">${C.fmtBRL(total.entrada)}</td><td class="n">${C.fmtBRL(total.saida)}</td><td class="n ${total.saldo < 0 ? 'neg' : ''}">${C.fmtBRL(total.saldo)}</td></tr></tfoot></table></div>
@@ -179,6 +195,32 @@
     }).join('');
   }
 
+  function cartaoBackup() {
+    const b = S.backup || { ligado: false };
+    let auto;
+    if (b.ligado) {
+      const chip = b.aviso ? '<span class="chip aviso">Atenção</span>' : '<span class="chip ok">Ligado</span>';
+      auto = `<h3>Backup automático ${chip}</h3>
+        <p>Copia os dados sozinho para a pasta abaixo, depois de cada alteração. Se ela estiver no Google Drive ou no OneDrive, os dados ficam também fora deste computador.</p>
+        <div class="bk-info"><b>Pasta:</b> ${esc(b.pasta)}<br><b>Último backup:</b> ${b.ultimo ? esc(fmtQuando(b.ultimo)) : 'ainda não foi feito'}</div>
+        ${b.erro ? `<div class="form-error">${esc(b.erro)}</div>` : ''}
+        <div class="bk-btns"><button class="btn small" data-action="backupAgora">Fazer backup agora</button><button class="btn light small" data-action="backupPasta">Trocar pasta</button><button class="link-btn red" data-action="backupParar">Desligar</button></div>`;
+    } else {
+      auto = `<h3>Backup automático <span class="chip">Desligado</span></h3>
+        <p>Escolha uma pasta e o sistema copia os dados sozinho para lá. O melhor é uma pasta dentro do <b>Google Drive</b> ou do <b>OneDrive</b>, assim os dados ficam também fora deste computador.</p>
+        <div class="bk-btns"><button class="btn small" data-action="backupPasta">Escolher a pasta do backup</button></div>`;
+    }
+    return `<div class="card" id="cardBackup"><h2>Backup e segurança</h2>
+      <div class="bk-grid">
+        <section class="bk bk-auto">${auto}</section>
+        <section class="bk"><h3>Cópia manual</h3><p>Salve um arquivo de cópia quando quiser, por exemplo em um pen drive. Para voltar a uma cópia, use Restaurar.</p>
+          <div class="bk-btns"><button class="btn light small" data-action="backupSave">Salvar cópia de segurança</button><button class="btn light small" data-action="backupRestore">Restaurar cópia</button></div></section>
+        <section class="bk"><h3>Planilha Excel</h3><p>Exporta todos os lançamentos do ano de ${S.ano} em uma planilha. Serve também como cópia legível dos números.</p>
+          <div class="bk-btns"><button class="btn light small" data-action="exportAno">Exportar o ano todo</button></div></section>
+      </div>
+      <div class="hint">Os dados ficam salvos neste computador. O programa também guarda uma cópia por dia na própria pasta dele (as últimas 30), mas essa cópia não protege se o computador estragar.</div></div>`;
+  }
+
   function viewGerenciar() {
     const total = S.data.estabelecimentos.length;
     const busca = total > 5 ? `<input type="text" id="fBusca" class="busca" placeholder="Buscar estabelecimento…" value="${esc(S.busca)}" aria-label="Buscar estabelecimento" autocomplete="off">` : '';
@@ -188,8 +230,7 @@
         ${S.estabError ? `<div class="form-error">${esc(S.estabError)}</div>` : ''}</form>
       <div class="card"><div class="card-head"><h2>Cadastrados (${total})</h2>${busca}</div><div id="estabLista">${estabRows(S.busca)}</div>
         <div class="hint">Ao renomear, todos os lançamentos e resumos acompanham o novo nome automaticamente.</div></div>
-      <div class="card"><h2>Onde ficam os dados</h2><div class="hint" style="margin:0 0 .7rem">Seus dados ficam salvos só neste computador. O programa faz uma cópia automática por dia.</div>
-        <button class="btn light small" data-action="openData">Abrir a pasta dos dados</button></div>`;
+      ${cartaoBackup()}`;
   }
 
   function captureForm() {
@@ -321,10 +362,32 @@
       }
       case 'updInstall': { const r = await api.updateInstall(); if (!r.ok) toast(r.error || 'Não foi possível atualizar agora.', { erro: true }); break; }
       case 'updDepois': if (S.upd) S.updFechado = (S.upd.versao + '|' + S.upd.estado); renderCartaoUpdate(S.upd || {}); break;
-      case 'toggleSidebar': setSidebar(!document.getElementById('sidebar').classList.contains('recolhido'), true); break;
       case 'tour': if (window.CFTour) window.CFTour.start(); break;
       case 'logout': if (window.CFTour) window.CFTour.fechar(); await api.logout(); S.data = null; mostrarLogin(); break;
-      case 'openData': api.openDataFolder(); break;
+      case 'irBackup': S.view = { name: 'gerenciar', estabId: null }; S.editId = null; await atualizarBackup(true); { const el = document.getElementById('cardBackup'); if (el) el.scrollIntoView({ block: 'start' }); } break;
+      case 'dispensarBackup': try { localStorage.setItem('cf_aviso_backup', String(Date.now())); } catch (_) { /* ok */ } render(); break;
+      case 'backupPasta': {
+        const r = await api.backupEscolher();
+        if (r.canceled) break;
+        if (!r.ok) { toast(r.error || 'Não foi possível usar essa pasta.', { erro: true }); break; }
+        S.backup = r; render(); toast('Backup automático ligado.'); break;
+      }
+      case 'backupAgora': {
+        const r = await api.backupAgora();
+        S.backup = r; render();
+        if (r.ok) toast('Backup feito.'); else toast(r.error || 'Não foi possível fazer o backup.', { erro: true });
+        break;
+      }
+      case 'backupParar': {
+        const ok = await modal({ title: 'Desligar o backup automático?', message: 'Os arquivos já copiados continuam na pasta, mas o sistema deixa de copiar novos dados.', okText: 'Desligar', cancelText: 'Cancelar', danger: true });
+        if (!ok) break;
+        S.backup = await api.backupRemover(); render(); toast('Backup automático desligado.'); break;
+      }
+      case 'exportAno': {
+        const r = await api.exportExcel({ mes: 0, ano: S.ano });
+        if (!r.ok) { if (!r.canceled) toast(r.error, { erro: true }); break; }
+        toast('Arquivo salvo.', { action: { label: 'Mostrar na pasta', fn: () => api.showInFolder(r.path) } }); break;
+      }
       default: break;
     }
   }
@@ -375,16 +438,22 @@
     renderCartaoUpdate(u);
   }
 
-  // ---------- barra lateral (abre e fecha só com clique no botão) ----------
+  // ---------- barra lateral (abre e fecha só com clique no próprio menu) ----------
   function setSidebar(recolher, guardar) {
     const sb = document.getElementById('sidebar'); if (!sb) return;
     sb.classList.toggle('recolhido', recolher);
-    const b = document.getElementById('sbToggle');
-    b.setAttribute('aria-expanded', String(!recolher));
-    const t = recolher ? 'Expandir o menu' : 'Recolher o menu';
-    b.setAttribute('aria-label', t); b.title = t;
+    sb.setAttribute('aria-expanded', String(!recolher));
+    sb.title = recolher ? 'Clique em uma área vazia do menu para abrir' : 'Clique em uma área vazia do menu para recolher';
     if (guardar) { try { localStorage.setItem('cf_sb_recolhido', recolher ? '1' : '0'); } catch (_) { /* ok */ } }
   }
+
+  // clique numa área vazia do menu (não em botões) abre ou fecha; Enter/Espaço com o menu em foco também
+  (function () {
+    const sb = document.getElementById('sidebar'); if (!sb) return;
+    const alternar = () => setSidebar(!sb.classList.contains('recolhido'), true);
+    sb.addEventListener('click', (e) => { if (!e.target.closest('button, a, input, select, textarea')) alternar(); });
+    sb.addEventListener('keydown', (e) => { if (e.target === sb && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); alternar(); } });
+  })();
 
   // ---------- eventos ----------
   document.addEventListener('click', (e) => {
@@ -423,6 +492,7 @@
     if (!st || st.auth) { mostrarLogin(); return; }
     S.data = st.data; S.info = st;
     api.updateStatus().then(pintarUpdate).catch(() => {});
+    try { S.backup = await api.backupStatus(); } catch (_) { S.backup = null; }
     S.view = { name: 'resumo', estabId: null }; S.editId = null;
     irParaUltimoLancamentoSeVazio();
     document.getElementById('login').hidden = true;

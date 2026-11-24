@@ -41,11 +41,14 @@ app.whenReady().then(async () => {
     ok(aberto > 200, `menu abre expandido (${aberto}px)`);
     await js(`document.querySelector('#nav .nav-btn:nth-child(2)').dispatchEvent(new MouseEvent('mouseover',{bubbles:true}))`); await sleep(500);
     ok((await larg()) === aberto, 'passar o mouse não muda o menu');
-    await js(`document.getElementById('sbToggle').click()`); await sleep(600);
+    await js(`document.querySelector('#nav .nav-btn').click()`); await sleep(400);
+    ok((await larg()) === aberto, 'clicar em um botão do menu não recolhe o menu');
+    ok(await js(`!document.getElementById('sbToggle')`), 'sem botão de seta');
+    await js(`document.getElementById('sidebar').click()`); await sleep(600);
     const fechado = await larg();
     ok(fechado < 100, `clique no botão recolhe (${fechado}px)`);
     ok(await js(`getComputedStyle(document.querySelector('.nav-tx')).display==='none'`), 'textos somem quando recolhido');
-    ok(await js(`document.getElementById('sbToggle').getAttribute('aria-expanded')==='false'`), 'aria-expanded atualizado');
+    ok(await js(`document.getElementById('sidebar').getAttribute('aria-expanded')==='false'`), 'aria-expanded atualizado');
     ok(await js(`document.querySelectorAll('#nav .nav-btn').length === 2`), 'menu tem só Resumo e Estabelecimentos');
     ok(await js(`[...document.querySelectorAll('#nav .nav-btn')].every(b => b.title && b.querySelector('svg'))`), 'itens têm ícone e dica (title) no modo recolhido');
     await shot('menu-2-recolhido');
@@ -63,7 +66,7 @@ app.whenReady().then(async () => {
     ok(await js(`!!document.getElementById('selEstab') && document.querySelectorAll('#selEstab option').length === 8`), 'tela do estabelecimento tem o seletor para trocar');
     ok(await js(`!document.querySelector('.font-ctl')`), 'sem controle de tamanho da letra');
     await shot('menu-3-recolhido-estab');
-    await js(`document.getElementById('sbToggle').click()`); await sleep(600);
+    await js(`document.getElementById('sidebar').click()`); await sleep(600);
     ok((await larg()) === aberto, 'novo clique expande de volta');
     ok((await js(`localStorage.getItem('cf_sb_recolhido')`)) === '0', 'preferência guardada');
     await shot('menu-4-estab-aberto');

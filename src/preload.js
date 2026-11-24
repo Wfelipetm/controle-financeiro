@@ -7,6 +7,10 @@ contextBridge.exposeInMainWorld('api', {
   updateCheck: () => ipcRenderer.invoke('update:check'),
   updateInstall: () => ipcRenderer.invoke('update:install'),
   onUpdate: (cb) => ipcRenderer.on('update:status', (_e, u) => cb(u)),
+  backupStatus: () => ipcRenderer.invoke('backup:status'),
+  backupEscolher: () => ipcRenderer.invoke('backup:escolher'),
+  backupAgora: () => ipcRenderer.invoke('backup:agora'),
+  backupRemover: () => ipcRenderer.invoke('backup:remover'),
   lembrado: () => ipcRenderer.invoke('auth:lembrado'),
   logout: () => ipcRenderer.invoke('auth:logout'),
   getState: () => ipcRenderer.invoke('state:get'),
@@ -17,5 +21,4 @@ contextBridge.exposeInMainWorld('api', {
   backupRestore: () => ipcRenderer.invoke('backup:restore'),
   importXlsx: () => ipcRenderer.invoke('import:xlsx'),
   showInFolder: (p) => ipcRenderer.invoke('shell:showInFolder', p),
-  openDataFolder: () => ipcRenderer.invoke('shell:openDataFolder'),
 });
