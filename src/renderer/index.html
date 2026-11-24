@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Controle Financeiro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="titlebar"><img src="img/brand-mark.svg" alt=""><span>Controle Financeiro</span></header>
+  <div id="login" hidden>
+    <section class="login-hero" aria-hidden="true">
+      <div class="login-logo">
+        <img src="img/brand-mark.svg" alt="" class="login-mark">
+        <div class="login-title"><span>Controle</span><em>Financeiro</em></div>
+      </div>
+      <div class="login-tag"><span>Organize</span><i></i><span>Controle</span><i></i><span>Planeje</span></div>
+      <img src="img/finance-illustration.svg" alt="" class="login-art">
+    </section>
+    <section class="login-side">
+      <form id="formLogin" class="login-card" autocomplete="off">
+        <div class="login-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.5"/><circle cx="12" cy="9.5" r="3.6"/><path d="M5.3 19.2c1.4-3 3.8-4.4 6.7-4.4s5.3 1.4 6.7 4.4"/></svg>
+        </div>
+        <h1 class="login-h">Bem-vindo(a)!</h1>
+        <p class="login-sub">Faça login para acessar o sistema</p>
+        <div class="login-field">
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4 3.6-6.3 8-6.3s8 2.3 8 6.3z"/></svg>
+          <input id="lUser" name="usuario" type="text" placeholder="Usuário" aria-label="Usuário" autocomplete="username" spellcheck="false" required>
+        </div>
+        <div class="login-field">
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 10V7.5a5 5 0 0 1 10 0V10h.5A2.5 2.5 0 0 1 20 12.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5v-7A2.5 2.5 0 0 1 6.5 10zm2.2 0h5.6V7.5a2.8 2.8 0 0 0-5.6 0zM12 14.2a1.7 1.7 0 0 0-.9 3.15V19h1.8v-1.65A1.7 1.7 0 0 0 12 14.2z"/></svg>
+          <input id="lPass" name="senha" type="password" placeholder="Senha" aria-label="Senha" autocomplete="current-password" required>
+          <button type="button" id="lShow" class="login-eye" aria-label="Mostrar senha" title="Mostrar senha">
+            <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.2 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.2-1.6M9.9 9.9A3 3 0 0 0 14.1 14.1"/><path d="M3 3l18 18"/></svg>
+          </button>
+        </div>
+        <label class="login-lembrar"><input type="checkbox" id="lLembrar"><span class="cx" aria-hidden="true"></span>Lembrar meu acesso neste computador</label>
+        <div id="lErro" class="login-erro" role="alert"></div>
+        <button class="login-btn" type="submit" id="lBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M4 12h11M11 8l4 4-4 4"/></svg>
+          <span>Entrar</span>
+        </button>
+        <div class="login-or"><span>ou</span></div>
+        <button type="button" id="lHelp" class="login-help">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.7-2 2.5-5 2.5"/></svg>
+          Precisa de ajuda?
+        </button>
+        <p id="lAjuda" class="login-ajuda" hidden>Use o usuário e a senha que foram informados a você. Se não souber, fale com quem instalou o sistema.</p>
+      </form>
+    </section>
+  </div>
+  <div id="app" hidden>
+    <aside id="sidebar">
+      <div class="sb-head">
+        <div class="brand"><img src="img/brand-mark.svg" alt="" class="brand-mark"><span class="sb-tx">Controle<br>Financeiro</span></div>
+        <button class="sb-toggle" id="sbToggle" data-action="toggleSidebar" aria-expanded="true" aria-label="Recolher o menu" title="Recolher o menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      </div>
+      <nav id="nav" aria-label="Menu principal"></nav>
+      <div class="sb-group" id="sideArquivos">
+        <div class="sb-label sb-tx">Arquivos</div>
+        <button class="sb-btn" data-action="importXlsx" title="Importar planilha" aria-label="Importar planilha"><span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg></span><span class="sb-tx">Importar planilha</span></button>
+        <button class="sb-btn" data-action="backupSave" title="Salvar cópia de segurança" aria-label="Salvar cópia de segurança"><span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg></span><span class="sb-tx">Salvar cópia de segurança</span></button>
+        <button class="sb-btn" data-action="backupRestore" title="Restaurar cópia" aria-label="Restaurar cópia"><span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4v5h5"/></svg></span><span class="sb-tx">Restaurar cópia</span></button>
+      </div>
+      <div class="sb-user">
+        <div class="sb-who">
+          <div class="sb-avatar" aria-hidden="true">AG</div>
+          <div class="sb-name sb-tx"><b>Açaí Gisele</b><span>Usuário do sistema</span></div>
+        </div>
+        <div class="sb-actions">
+          <button class="sb-act" data-action="tour" title="Tour guiado" aria-label="Tour guiado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span class="sb-tx">Tour</span></button>
+          <button class="sb-act" data-action="logout" title="Sair" aria-label="Sair"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M20 12H9M16 8l4 4-4 4"/></svg><span class="sb-tx">Sair</span></button>
+        </div>
+        <button class="sb-version sb-tx" id="sbUpd" data-action="update" title="Verificar atualizações"><span class="dot" id="sbDot"></span><span id="sbUpdTx">Versão <b id="sbVersao">1.0.0</b></span></button>
+      </div>
+    </aside>
+    <main id="main"></main>
+  </div>
+  <div id="modalRoot"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+  <script src="tour.js"></script>
+</body>
+</html>

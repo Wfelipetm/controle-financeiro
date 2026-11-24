@@ -1,0 +1,32 @@
+# Cria um Release no GitHub com o instalador, sempre que uma tag "v*" for enviada.
+# Os apps instalados leem esse Release para se atualizarem sozinhos.
+name: Publicar versão
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Testes
+        run: npm test
+      - name: Conferir que a tag bate com a versão do package.json
+        shell: bash
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          if [ "$v" != "$GITHUB_REF_NAME" ]; then echo "Tag $GITHUB_REF_NAME diferente da versão $v"; exit 1; fi
+      - name: Compilar e publicar o Release
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
