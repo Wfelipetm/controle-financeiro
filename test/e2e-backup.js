@@ -19,7 +19,7 @@ app.whenReady().then(async () => {
     const shot = async (n) => { await sleep(500); fs.writeFileSync(path.join(OUT, n + '.png'), (await win.webContents.capturePage()).toPNG()); };
     await js(`localStorage.setItem('cf_tour_visto','1'); localStorage.removeItem('cf_aviso_backup')`);
     await sleep(1500);
-    await js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.gisele';F.elements.senha.value='senho123456';F.requestSubmit();})()`); await sleep(1500);
+    await js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.giselle';F.elements.senha.value='senho123456';F.requestSubmit();})()`); await sleep(1500);
     await js(`window.api.op('addEstabs',{nomes:['Projeto','Loja']}).then(()=>window.api.getState()).then(s=>{__cf.S.data=s.data;__cf.render();})`); await sleep(500);
 
     // aviso no Resumo

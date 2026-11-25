@@ -22,10 +22,10 @@ app.whenReady().then(async () => {
     ok(bloq && bloq.auth === true && !bloq.data, 'getState bloqueado sem login');
     const bloq2 = await js(`window.api.op('addEstab', { nome: 'X' })`);
     ok(bloq2.ok === false && bloq2.auth === true, 'op bloqueada sem login');
-    await entrar('acai.gisele', 'errada'); await sleep(600);
+    await entrar('acai.giselle', 'errada'); await sleep(600);
     ok((await js(`document.getElementById('lErro').textContent`)) === 'Usuário ou senha incorretos.', 'senha errada mostra erro');
     await shot('login-2-erro');
-    await entrar('Açai.Gisele', 'senho123456'); await sleep(800);
+    await entrar('Açai.Giselle', 'senho123456'); await sleep(800);
     ok(await js(`document.getElementById('login').hidden && !document.getElementById('app').hidden`), 'login correto mostra o app');
     ok((await js(`document.querySelector('#nav').children.length`)) > 0, 'menu lateral renderizado');
     await shot('login-3-app');

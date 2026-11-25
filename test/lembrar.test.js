@@ -13,8 +13,8 @@ const pasta = () => fs.mkdtempSync(path.join(os.tmpdir(), 'cf-lembrar-'));
 
 test('salva e carrega o acesso, sem deixar a senha em texto no arquivo', () => {
   const d = pasta(); const l = new Lembrar(d, falso());
-  assert.strictEqual(l.salvar('acai.gisele', 'senho123456'), true);
-  assert.deepStrictEqual(l.carregar(), { usuario: 'acai.gisele', senha: 'senho123456' });
+  assert.strictEqual(l.salvar('acai.giselle', 'senho123456'), true);
+  assert.deepStrictEqual(l.carregar(), { usuario: 'acai.giselle', senha: 'senho123456' });
   assert.ok(!fs.readFileSync(path.join(d, 'acesso.bin'), 'utf8').includes('senho123456'));
 });
 

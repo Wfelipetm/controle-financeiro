@@ -17,7 +17,7 @@ const dataDir = process.env.CF_DATA_DIR || app.getPath('userData');
 const store = new Store(dataDir);
 const externo = new BackupExterno(dataDir, store);
 let win = null;
-const auth = new Auth();
+const auth = new Auth(undefined, dataDir);
 const lembrar = new Lembrar(dataDir, safeStorage);
 
 // ---------- operações sobre os dados ----------
@@ -77,6 +77,14 @@ function pushAndSave(fn) {
 // ---------- atualização automática ----------
 // estado: dev | atualizado | verificando | baixando | pronta | erro
 const upd = { estado: app.isPackaged ? 'atualizado' : 'dev', versao: null, pct: 0 };
+// notas da versão (vêm no latest.yml): texto simples, uma novidade por linha, com "- " na frente
+function lerNotas(i) {
+  let t = i && i.releaseNotes;
+  if (Array.isArray(t)) t = t.map((x) => (x && x.note) || '').join('\n');
+  if (typeof t !== 'string') return [];
+  return t.replace(/<br\s*\/?>|<\/(li|p|div|h\d)>/gi, '\n').replace(/<[^>]*>/g, '')
+    .split('\n').map((l) => l.replace(/^\s*[-*•]\s*/, '').trim()).filter(Boolean).slice(0, 8).map((l) => l.slice(0, 220));
+}
 function enviarUpdate(patch) {
   Object.assign(upd, patch);
   if (win && !win.isDestroyed()) win.webContents.send('update:status', { ...upd, atual: app.getVersion() });
@@ -96,10 +104,10 @@ function iniciarAtualizador() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;   // se ela só fechar o app, instala ao sair
   autoUpdater.on('checking-for-update', () => { if (checagemManual) enviarUpdate({ estado: 'verificando' }); });
-  autoUpdater.on('update-available', (i) => enviarUpdate({ estado: 'baixando', versao: i.version, pct: 0 }));
-  autoUpdater.on('update-not-available', () => enviarUpdate({ estado: 'atualizado', versao: null }));
+  autoUpdater.on('update-available', (i) => enviarUpdate({ estado: 'baixando', versao: i.version, pct: 0, notas: lerNotas(i) }));
+  autoUpdater.on('update-not-available', () => enviarUpdate({ estado: 'atualizado', versao: null, notas: [] }));
   autoUpdater.on('download-progress', (p) => enviarUpdate({ estado: 'baixando', pct: Math.round(p.percent || 0) }));
-  autoUpdater.on('update-downloaded', (i) => enviarUpdate({ estado: 'pronta', versao: i.version }));
+  autoUpdater.on('update-downloaded', (i) => enviarUpdate({ estado: 'pronta', versao: i.version, notas: lerNotas(i) }));
   autoUpdater.on('error', () => { if (checagemManual) enviarUpdate({ estado: 'erro' }); });
   // verifica logo ao abrir, a cada minuto e sempre que ela volta para a janela do sistema:
   // assim o aviso aparece poucos instantes depois de o Release ficar pronto no GitHub
@@ -120,6 +128,14 @@ function registrarIPC() {
   ipcMain.handle('auth:logout', () => { auth.logout(); return { ok: true }; });
   const protegido = (fn) => (e, ...args) => (auth.logado ? fn(e, ...args) : { ok: false, auth: true, error: 'Faça login para continuar.' });
   const handle = (canal, fn) => ipcMain.handle(canal, protegido(fn));
+
+  handle('conta:get', () => ({ ok: true, usuario: auth.usuario() }));
+  handle('conta:alterar', (_e, senhaAtual, novoUsuario, novaSenha) => {
+    const r = auth.alterar(senhaAtual, novoUsuario, novaSenha);
+    if (!r.ok) return r;
+    if (lembrar.carregar()) lembrar.salvar(r.usuario, r.senhaNova || senhaAtual);   // se ela pediu para lembrar, guarda o acesso novo
+    return { ok: true, usuario: r.usuario };
+  });
 
   handle('state:get', () => ({ data: store.data, recovered: store.recovered, dataDir, version: app.getVersion() }));
 

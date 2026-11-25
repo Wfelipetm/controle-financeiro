@@ -14,7 +14,7 @@ app.whenReady().then(async () => {
     let win; for (let i = 0; i < 50 && !win; i++) { await sleep(200); win = BrowserWindow.getAllWindows()[0]; }
     const js = (c) => win.webContents.executeJavaScript(c);
     const shot = async (n) => { await sleep(450); fs.writeFileSync(path.join(OUT, n + '.png'), (await win.webContents.capturePage()).toPNG()); };
-    const entrar = () => js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.gisele';F.elements.senha.value='senho123456';F.requestSubmit();})()`);
+    const entrar = () => js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.giselle';F.elements.senha.value='senho123456';F.requestSubmit();})()`);
     // passa por todos os passos; devolve info de cada um
     const percorrer = async (prefixo) => {
       const infos = [];

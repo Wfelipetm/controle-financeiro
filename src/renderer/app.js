@@ -221,6 +221,51 @@
       <div class="hint">Os dados ficam salvos neste computador. O programa também guarda uma cópia por dia na própria pasta dele (as últimas 30), mas essa cópia não protege se o computador estragar.</div></div>`;
   }
 
+  function cartaoAcesso() {
+    return `<div class="card" id="cardAcesso"><h2>Acesso ao sistema</h2>
+      <p class="acesso-p">Usuário atual: <b>${esc(S.usuario || '')}</b>. A senha fica guardada só neste computador, de forma protegida.</p>
+      <div class="bk-btns"><button class="btn light small" data-action="conta">Alterar usuário e senha</button></div></div>`;
+  }
+
+  function modalConta() {
+    return new Promise((resolve) => {
+      const root = $('#modalRoot');
+      root.innerHTML = `<div class="overlay"><form class="modal conta" id="formConta" role="dialog" aria-modal="true" aria-labelledby="cTit" autocomplete="off" novalidate>
+        <div class="conta-head"><span class="conta-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.6 3.7-5.6 7.5-5.6s6.7 2 7.5 5.6"/></svg></span><div><h3 id="cTit">Alterar usuário e senha</h3><p>Deixe em branco o que não quiser mudar.</p></div></div>
+        <div class="conta-corpo">
+        <div class="cf"><label for="cAtual">Senha atual</label><div class="cf-box"><span class="cf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><input type="password" id="cAtual" autocomplete="current-password" placeholder="Digite a senha que usa hoje"><button type="button" class="cf-eye" data-alvo="cAtual" aria-label="Mostrar senha" title="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <div class="conta-sep"><span>Novo acesso</span></div>
+        <div class="cf"><label for="cUser">Usuário</label><div class="cf-box"><span class="cf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.6 3.7-5.6 7.5-5.6s6.7 2 7.5 5.6"/></svg></span><input type="text" id="cUser" maxlength="40" value="${esc(S.usuario || '')}" autocapitalize="none" spellcheck="false" autocomplete="off"></div><small>Sem espaços. Letras maiúsculas e acentos não fazem diferença.</small></div>
+        <div class="cf"><label for="cNova">Senha nova</label><div class="cf-box"><span class="cf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="3.6"/><path d="M10.7 12.5L19 4.2M16 7.2l2.3 2.3"/></svg></span><input type="password" id="cNova" autocomplete="new-password" maxlength="64" placeholder="Mínimo de 6 caracteres"><button type="button" class="cf-eye" data-alvo="cNova" aria-label="Mostrar senha" title="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="cf"><label for="cNova2">Repita a senha nova</label><div class="cf-box"><span class="cf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="3.6"/><path d="M10.7 12.5L19 4.2M16 7.2l2.3 2.3"/></svg></span><input type="password" id="cNova2" autocomplete="new-password" maxlength="64" placeholder="Digite a senha nova outra vez"><button type="button" class="cf-eye" data-alvo="cNova2" aria-label="Mostrar senha" title="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <div class="form-error" id="cErro" role="alert"></div>
+        </div>
+        <div class="conta-rodape"><button type="button" class="btn light" id="cCancel">Cancelar</button><button type="submit" class="btn" id="cOk">Salvar alterações</button></div></form></div>`;
+      root.querySelectorAll('.cf-eye').forEach((b) => b.addEventListener('click', () => {
+        const i = document.getElementById(b.dataset.alvo); const ver = i.type === 'password';
+        i.type = ver ? 'text' : 'password'; b.classList.toggle('on', ver);
+        b.setAttribute('aria-label', ver ? 'Ocultar senha' : 'Mostrar senha'); b.title = ver ? 'Ocultar senha' : 'Mostrar senha';
+      }));
+      const f = $('#formConta'); const erro = $('#cErro');
+      const fechar = (v) => { root.innerHTML = ''; document.removeEventListener('keydown', onKey, true); resolve(v); };
+      const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); fechar(null); } };
+      document.addEventListener('keydown', onKey, true);
+      $('#cCancel').onclick = () => fechar(null);
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nova = $('#cNova').value;
+        if (!$('#cAtual').value) { erro.textContent = 'Digite a senha atual.'; $('#cAtual').focus(); return; }
+        if (nova !== $('#cNova2').value) { erro.textContent = 'As duas senhas novas não são iguais.'; $('#cNova2').focus(); return; }
+        $('#cOk').disabled = true; erro.textContent = '';
+        const r = await api.contaAlterar($('#cAtual').value, $('#cUser').value, nova);
+        if (r.ok) { fechar(r); return; }
+        $('#cOk').disabled = false; erro.textContent = r.error || 'Não foi possível salvar.';
+        if (/atual/.test(erro.textContent)) { $('#cAtual').value = ''; $('#cAtual').focus(); }
+      });
+      $('#cAtual').focus();
+    });
+  }
+
   function viewGerenciar() {
     const total = S.data.estabelecimentos.length;
     const busca = total > 5 ? `<input type="text" id="fBusca" class="busca" placeholder="Buscar estabelecimento…" value="${esc(S.busca)}" aria-label="Buscar estabelecimento" autocomplete="off">` : '';
@@ -230,7 +275,8 @@
         ${S.estabError ? `<div class="form-error">${esc(S.estabError)}</div>` : ''}</form>
       <div class="card"><div class="card-head"><h2>Cadastrados (${total})</h2>${busca}</div><div id="estabLista">${estabRows(S.busca)}</div>
         <div class="hint">Ao renomear, todos os lançamentos e resumos acompanham o novo nome automaticamente.</div></div>
-      ${cartaoBackup()}`;
+      ${cartaoBackup()}
+      ${cartaoAcesso()}`;
   }
 
   function captureForm() {
@@ -355,13 +401,18 @@
       }
       case 'update': {
         if (S.upd && S.upd.estado === 'pronta') {
-          const ok = await modal({ title: 'Atualizar o sistema', message: 'A versão ' + S.upd.versao + ' está pronta. O programa vai fechar e abrir de novo sozinho. Seus dados não são alterados.', okText: 'Reiniciar e atualizar', cancelText: 'Agora não' });
+          const ok = await modal({ title: 'Atualizar o sistema', message: 'A versão ' + S.upd.versao + ' está pronta.' + ((S.upd.notas || []).length ? '\n\nO que há de novo:\n• ' + S.upd.notas.join('\n• ') + '\n\n' : ' ') + 'O programa vai fechar e abrir de novo sozinho. Seus dados não são alterados.', okText: 'Reiniciar e atualizar', cancelText: 'Agora não' });
           if (ok) await api.updateInstall();
         } else { pintarUpdate(await api.updateCheck()); }
         break;
       }
       case 'updInstall': { const r = await api.updateInstall(); if (!r.ok) toast(r.error || 'Não foi possível atualizar agora.', { erro: true }); break; }
       case 'updDepois': if (S.upd) S.updFechado = (S.upd.versao + '|' + S.upd.estado); renderCartaoUpdate(S.upd || {}); break;
+      case 'conta': {
+        const r = await modalConta();
+        if (r && r.ok) { S.usuario = r.usuario; pintarUsuario(); render(); toast('Acesso alterado. Use o novo usuário e a nova senha na próxima vez.'); }
+        break;
+      }
       case 'tour': if (window.CFTour) window.CFTour.start(); break;
       case 'logout': if (window.CFTour) window.CFTour.fechar(); await api.logout(); S.data = null; mostrarLogin(); break;
       case 'irBackup': S.view = { name: 'gerenciar', estabId: null }; S.editId = null; await atualizarBackup(true); { const el = document.getElementById('cardBackup'); if (el) el.scrollIntoView({ block: 'start' }); } break;
@@ -392,6 +443,8 @@
     }
   }
 
+  function pintarUsuario() { const el = document.getElementById('sbUsuario'); if (el) el.textContent = S.usuario || 'Usuário do sistema'; }
+
   // ---------- atualização automática ----------
   const ICO = {
     ok: SVG('<circle cx="12" cy="12" r="9.5"/><path d="M7.8 12.4l3 3 5.4-6"/>'),
@@ -418,7 +471,8 @@
     if (!aberto) { c.hidden = true; return; }
     const pronta = u.estado === 'pronta';
     const antes = c.hidden;
-    c.innerHTML = '<div class="upd-t">Nova versão ' + esc(u.versao || '') + (pronta ? ' pronta' : ' encontrada') + '</div>' +
+    const notas = (u.notas && u.notas.length) ? '<div class="upd-notas"><b>O que há de novo</b><ul>' + u.notas.map((n) => '<li>' + esc(n) + '</li>').join('') + '</ul></div>' : '';
+    c.innerHTML = '<div class="upd-t">Nova versão ' + esc(u.versao || '') + (pronta ? ' pronta' : ' encontrada') + '</div>' + notas +
       (pronta
         ? '<p>O programa fecha e abre de novo sozinho. Seus dados não são alterados.</p><div class="upd-b"><button class="btn small" data-action="updInstall">Atualizar agora</button><button class="btn light small" data-action="updDepois">Depois</button></div>'
         : '<p>Baixando em segundo plano. Você pode continuar usando o sistema.</p><div class="upd-bar"><i style="width:' + (u.pct || 0) + '%"></i></div><div class="upd-b"><button class="btn light small" data-action="updDepois">Ocultar</button></div>');
@@ -492,6 +546,7 @@
     if (!st || st.auth) { mostrarLogin(); return; }
     S.data = st.data; S.info = st;
     api.updateStatus().then(pintarUpdate).catch(() => {});
+    try { const c = await api.contaGet(); S.usuario = c && c.usuario; pintarUsuario(); } catch (_) { /* ok */ }
     try { S.backup = await api.backupStatus(); } catch (_) { S.backup = null; }
     S.view = { name: 'resumo', estabId: null }; S.editId = null;
     irParaUltimoLancamentoSeVazio();

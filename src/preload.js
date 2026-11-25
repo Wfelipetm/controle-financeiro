@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('api', {
   backupAgora: () => ipcRenderer.invoke('backup:agora'),
   backupRemover: () => ipcRenderer.invoke('backup:remover'),
   lembrado: () => ipcRenderer.invoke('auth:lembrado'),
+  contaGet: () => ipcRenderer.invoke('conta:get'),
+  contaAlterar: (atual, usuario, senha) => ipcRenderer.invoke('conta:alterar', atual, usuario, senha),
   logout: () => ipcRenderer.invoke('auth:logout'),
   getState: () => ipcRenderer.invoke('state:get'),
   op: (name, payload) => ipcRenderer.invoke('op', name, payload),

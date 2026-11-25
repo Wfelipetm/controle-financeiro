@@ -67,6 +67,15 @@ const mock = `
     deleteLanc: (d, p) => C.deleteLanc(d, p.id),
   };
   let logado = false;
+  let aoAtualizar = null;
+  const NOTAS = ['Agora você pode alterar o usuário e a senha: clique no seu nome no menu lateral ou use o cartão "Acesso ao sistema" em Estabelecimentos.', 'Corrigido o nome do usuário padrão para acai.giselle (o acesso antigo continua funcionando até você trocá-lo).', 'Este aviso agora mostra o que mudou em cada atualização.'];
+  // na prévia, o aviso de nova versão aparece sozinho alguns segundos depois do login
+  function simularAtualizacao() {
+    const e = (o) => { if (aoAtualizar) aoAtualizar(Object.assign({ atual: '1.1.2', versao: '1.1.3', pct: 0, notas: NOTAS }, o)); };
+    setTimeout(() => e({ estado: 'baixando', pct: 40 }), 5000);
+    setTimeout(() => e({ estado: 'pronta', pct: 100 }), 8000);
+  }
+  const conta = { usuario: 'acai.giselle', senha: 'senho123456' };   // na prévia a senha atual de teste é senho123456
   let bk = null; // backup automático simulado
   const bkStatus = () => ({ ok: true, pasta: bk ? bk.pasta : null, ultimo: bk ? bk.ultimo : null, erro: null, aviso: null, ligado: !!bk });
   const SEM_ARQUIVO = { ok: false, error: 'Na prévia não dá para salvar ou abrir arquivos. No aplicativo instalado isso funciona normalmente.' };
@@ -76,7 +85,7 @@ const mock = `
     authStatus: () => ok({ logado }),
     login: (usuario, senha, lembrar) => {
       if (!String(usuario || '').trim() || !String(senha || '')) return ok({ ok: false, error: 'Usuário ou senha incorretos.' });
-      logado = true;
+      logado = true; simularAtualizacao();
       guardar(() => { if (lembrar) localStorage.setItem('prev_acesso', JSON.stringify({ usuario, senha })); else localStorage.removeItem('prev_acesso'); });
       return ok({ ok: true });
     },
@@ -93,12 +102,23 @@ const mock = `
     backupRestore: () => ok(SEM_ARQUIVO), importXlsx: () => ok(SEM_ARQUIVO),
     updateStatus: () => ok({ estado: 'atualizado', atual: '1.0.0', versao: null, pct: 0 }),
     updateCheck: () => ok({ estado: 'atualizado', atual: '1.0.0', versao: null, pct: 0 }),
-    updateInstall: () => ok({ ok: false }), onUpdate: () => {},
+    updateInstall: () => ok({ ok: false }), onUpdate: (cb) => { aoAtualizar = cb; },
     backupStatus: () => ok(bkStatus()),
     backupEscolher: () => { bk = { pasta: 'G:\Meu Drive\Financeiro (exemplo)', ultimo: new Date().toISOString(), erro: null }; return ok(bkStatus()); },
     backupAgora: () => { if (bk) bk.ultimo = new Date().toISOString(); return ok(bkStatus()); },
     backupRemover: () => { bk = null; return ok(bkStatus()); },
     showInFolder: () => ok(),
+    contaGet: () => ok({ ok: true, usuario: conta.usuario }),
+    contaAlterar: (atual, usuario, nova) => {
+      if (atual !== conta.senha) return ok({ ok: false, error: 'A senha atual não está correta.' });
+      const u = String(usuario || '').trim() || conta.usuario;
+      if (u.length < 3) return ok({ ok: false, error: 'O usuário precisa ter de 3 a 40 letras.' });
+      if (u.indexOf(" ") >= 0) return ok({ ok: false, error: 'O usuário não pode ter espaços.' });
+      if (nova && nova.length < 6) return ok({ ok: false, error: 'A senha nova precisa ter de 6 a 64 caracteres.' });
+      if (!nova && u === conta.usuario) return ok({ ok: false, error: 'Nada foi alterado. Escreva um usuário ou uma senha nova.' });
+      conta.usuario = u; if (nova) conta.senha = nova;
+      return ok({ ok: true, usuario: u });
+    },
   };
 })();
 `;

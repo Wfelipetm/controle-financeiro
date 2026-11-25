@@ -14,7 +14,7 @@ app.whenReady().then(async () => {
     let win; for (let i = 0; i < 50 && !win; i++) { await sleep(200); win = BrowserWindow.getAllWindows()[0]; }
     const js = (c) => win.webContents.executeJavaScript(c);
     const shot = async (n) => { await sleep(500); fs.writeFileSync(path.join(OUT, n + '.png'), (await win.webContents.capturePage()).toPNG()); };
-    const entrar = (lembrar) => js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.gisele';F.elements.senha.value='senho123456';document.getElementById('lLembrar').checked=${lembrar};F.requestSubmit();})()`);
+    const entrar = (lembrar) => js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.giselle';F.elements.senha.value='senho123456';document.getElementById('lLembrar').checked=${lembrar};F.requestSubmit();})()`);
     await js(`localStorage.setItem('cf_tour_visto','1')`);
     await sleep(1500);
 
@@ -24,7 +24,7 @@ app.whenReady().then(async () => {
     await js(`window.api.op('addEstabs',{nomes:['Projeto','Invictus','Delivery','Loja']}).then(()=>window.api.getState()).then(s=>{__cf.S.data=s.data;__cf.render();})`); await sleep(600);
     await shot('menu-1-aberto');
     await js(`document.querySelector('[data-action=logout]').click()`); await sleep(900);
-    ok((await js(`document.getElementById('lUser').value`)) === 'acai.gisele', 'usuário volta preenchido');
+    ok((await js(`document.getElementById('lUser').value`)) === 'acai.giselle', 'usuário volta preenchido');
     ok((await js(`document.getElementById('lPass').value`)) === 'senho123456', 'senha volta preenchida');
     ok(await js(`document.getElementById('lLembrar').checked`), 'caixa marcada');
     ok(!fs.readFileSync(path.join(process.env.CF_DATA_DIR, 'acesso.bin')).includes('senho123456'), 'arquivo guardado não tem a senha em texto');

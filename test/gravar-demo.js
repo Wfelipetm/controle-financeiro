@@ -62,7 +62,7 @@ app.whenReady().then(async () => {
     // 1) abertura e login
     await D(`D.say('Controle Financeiro: organize, controle e planeje')`); await sleep(3200);
     await D(`D.say('Acesso protegido por usuário e senha')`);
-    await D(`D.type('#lUser', 'acai.gisele')`);
+    await D(`D.type('#lUser', 'acai.giselle')`);
     await D(`D.type('#lPass', 'senho123456', 110)`);
     await D(`D.click('#lBtn')`); await sleep(1800);
 

@@ -17,7 +17,7 @@ app.whenReady().then(async () => {
     const classe = () => js(`document.getElementById('sbIc').className`);
     await js(`localStorage.setItem('cf_tour_visto','1')`);
     await sleep(1500);
-    await js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.gisele';F.elements.senha.value='senho123456';F.requestSubmit();})()`); await sleep(1500);
+    await js(`(()=>{const F=document.querySelector('#formLogin');F.elements.usuario.value='acai.giselle';F.elements.senha.value='senho123456';F.requestSubmit();})()`); await sleep(1500);
     const versao = () => js(`document.getElementById('sbVersao').textContent`);
     const cartao = () => js(`(()=>{const c=document.getElementById('updCard');return c.hidden?'':c.textContent})()`);
     ok((await texto()) === 'Modo de teste', 'fora do app instalado mostra "Modo de teste"');
@@ -35,6 +35,9 @@ app.whenReady().then(async () => {
     ok((await texto()).includes('pronta') && (await classe()).includes('pronta'), 'pronta: destaque roxo');
     ok((await cartao()).includes('Nova versão 1.0.1 pronta') && (await cartao()).includes('Atualizar agora'), 'cartão com botão "Atualizar agora"');
     fs.writeFileSync(path.join(OUT, 'update-cartao.png'), (await win.webContents.capturePage()).toPNG());
+    await manda({ estado: 'pronta', versao: '1.0.1', notas: ['Agora dá para alterar o usuário e a senha.', 'Correção no nome do usuário.'] });
+    ok((await cartao()).includes('O que há de novo') && (await cartao()).includes('alterar o usuário e a senha') && (await cartao()).includes('Correção no nome'), 'cartão lista o que mudou na versão');
+    fs.writeFileSync(path.join(OUT, 'update-notas.png'), (await win.webContents.capturePage()).toPNG());
     await js(`document.querySelector('#updCard [data-action=updDepois]').click()`); await sleep(300);
     ok((await cartao()) === '', '"Depois" fecha o cartão');
     await manda({ estado: 'pronta', versao: '1.0.1' });
